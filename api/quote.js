@@ -22,7 +22,7 @@ const brands = {
     email: 'lenin@equipmentn.com',
     phone: '55 5351 6970',
     website: 'greenleemc.com',
-    websiteUrl: 'https://greenleemachinery.com',
+    websiteUrl: 'https://greenleemc.com',
     formality: 'usted'
   },
   construirmx: {
@@ -33,7 +33,7 @@ const brands = {
     email: 'cotizaciones@construirmx.mx',
     phone: '55 5351 6970',
     website: 'construir.com.mx',
-    websiteUrl: 'https://construirmx.mx',
+    websiteUrl: 'https://construir.com.mx',
     formality: 'usted'
   }
 };
