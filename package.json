@@ -1,7 +1,9 @@
 {
-  "name": "shopify-quote-ridgid-api",
+  "name": "shopify-quote-unified-api",
   "version": "1.0.0",
+  "description": "Unified quote system for Shopify",
+  "main": "api/quote.js",
   "dependencies": {
-    "resend": "^3.2.0"
+    "resend": "^3.0.0"
   }
 }
