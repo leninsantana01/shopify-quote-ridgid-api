@@ -38,6 +38,9 @@ const brands = {
   }
 };
 
+// DIRECCIÓN DE PRUEBA - Temporalmente todos los correos van aquí
+const TEST_EMAIL = 'lenin@equipmentn.com';
+
 // Función para generar el correo del cliente
 function getClientEmailHTML(brand, data) {
   const brandConfig = brands[brand] || brands.ridgid;
@@ -111,7 +114,7 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'Marca no válida. Debe ser: ridgid, greenlee o construirmx' });
   }
 
-  // Validación de campos requeridos (INCLUYE PRODUCT)
+  // Validación de campos requeridos
   if (!name || !company || !email || !product || !quantity) {
     return res.status(400).json({ error: 'Faltan campos requeridos: name, company, email, product, quantity' });
   }
@@ -119,11 +122,10 @@ module.exports = async function handler(req, res) {
   const brandConfig = brands[brand];
 
   try {
-    // Correo al cliente
+    // Correo al cliente - TEMPORALMENTE VA A TEST_EMAIL
     const clientEmailResult = await resend.emails.send({
       from: `${brandConfig.name} <onboarding@resend.dev>`,
-      to: email,
-      bcc: brandConfig.email,
+      to: TEST_EMAIL,
       subject: 'Confirmación de solicitud de cotización - ' + brandConfig.name,
       html: getClientEmailHTML(brand, { product, variant, sku, name, company, quantity, notes })
     });
@@ -133,10 +135,10 @@ module.exports = async function handler(req, res) {
       return res.status(500).json({ error: 'Error enviando confirmación al cliente' });
     }
 
-    // Correo al equipo de ventas
+    // Correo al equipo de ventas - TEMPORALMENTE VA A TEST_EMAIL
     const salesEmailResult = await resend.emails.send({
       from: `${brandConfig.name} Cotizaciones <onboarding@resend.dev>`,
-      to: brandConfig.email,
+      to: TEST_EMAIL,
       subject: `[Nueva Cotización - ${brandConfig.name}] ${product} — ${company}`,
       html: getSalesEmailHTML(brand, { product, variant, sku, product_url, name, company, email, phone, quantity, notes })
     });
