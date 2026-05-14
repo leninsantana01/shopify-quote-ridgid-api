@@ -1,5 +1,6 @@
 const { Resend } = require('resend');
 const resend = new Resend(process.env.RESEND_API_KEY);
+
 // Configuración de marcas
 const brands = {
   ridgid: {
@@ -107,19 +108,19 @@ module.exports = async function handler(req, res) {
 
   // Validación de marca
   if (!brand || !brands[brand]) {
-    return res.status(400).json({ error: 'Marca no válida' });
+    return res.status(400).json({ error: 'Marca no válida. Debe ser: ridgid, greenlee o construirmx' });
   }
 
-  // Validación de campos requeridos
-  if (!name || !company || !email || !quantity) {
-    return res.status(400).json({ error: 'Faltan campos requeridos' });
+  // Validación de campos requeridos (INCLUYE PRODUCT)
+  if (!name || !company || !email || !product || !quantity) {
+    return res.status(400).json({ error: 'Faltan campos requeridos: name, company, email, product, quantity' });
   }
 
   const brandConfig = brands[brand];
 
   try {
     // Correo al cliente
-    await resend.emails.send({
+    const clientEmailResult = await resend.emails.send({
       from: `${brandConfig.name} <onboarding@resend.dev>`,
       to: email,
       bcc: brandConfig.email,
@@ -127,17 +128,27 @@ module.exports = async function handler(req, res) {
       html: getClientEmailHTML(brand, { product, variant, sku, name, company, quantity, notes })
     });
 
+    if (!clientEmailResult || clientEmailResult.error) {
+      console.error('Error enviando correo al cliente:', clientEmailResult.error);
+      return res.status(500).json({ error: 'Error enviando confirmación al cliente' });
+    }
+
     // Correo al equipo de ventas
-    await resend.emails.send({
+    const salesEmailResult = await resend.emails.send({
       from: `${brandConfig.name} Cotizaciones <onboarding@resend.dev>`,
       to: brandConfig.email,
       subject: `[Nueva Cotización - ${brandConfig.name}] ${product} — ${company}`,
       html: getSalesEmailHTML(brand, { product, variant, sku, product_url, name, company, email, phone, quantity, notes })
     });
 
+    if (!salesEmailResult || salesEmailResult.error) {
+      console.error('Error enviando correo al equipo de ventas:', salesEmailResult.error);
+      return res.status(500).json({ error: 'Error enviando solicitud al equipo de ventas' });
+    }
+
     return res.status(200).json({ success: true, message: 'Cotización registrada exitosamente' });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: 'Error procesando la solicitud' });
+    console.error('Error en el handler:', error);
+    return res.status(500).json({ error: 'Error procesando la solicitud', details: error.message });
   }
 };
