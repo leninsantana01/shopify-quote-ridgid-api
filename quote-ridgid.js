@@ -29,7 +29,7 @@ module.exports = async function handler(req, res) {
         <div style="padding:32px">
           <h2 style="color:#d32f2f;margin-top:0">¡Hola ${name}!</h2>
           <p>Recibimos tu solicitud de cotización. Un asesor técnico te contactará en <strong>menos de 24 horas hábiles</strong>.</p>
-          <div style="background:#f5f5f5;padding:16px;border-radius:6px;margin:24px 0">
+          <div style="background:#d32f2f ;padding:16px;border-radius:6px;margin:24px 0">
             <p style="margin:4px 0"><strong>Producto:</strong> ${product}</p>
             ${sku ? `<p style="margin:4px 0"><strong>SKU:</strong> ${sku}</p>` : ''}
             <p style="margin:4px 0"><strong>Cantidad:</strong> ${quantity}</p>
@@ -39,7 +39,7 @@ module.exports = async function handler(req, res) {
           <p style="color:#666;font-size:14px">¿Preguntas urgentes? Llámanos al <strong>55 5351 6970</strong><br>
           <strong>Horario de atención:</strong> 9:00 - 17:00 hrs</p>
         </div>
-        <div style="background:#f0f0f0;padding:16px;text-align:center;font-size:12px;color:#666">
+        <div style="background:#d32f2f ;padding:16px;text-align:center;font-size:12px;color:#666">
           RIDGID · <a href="https://ridgidmc.com" style="color:#d32f2f;text-decoration:none">ridgidmc.com</a>
         </div>
       </div>`
