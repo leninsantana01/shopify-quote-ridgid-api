@@ -1,6 +1,5 @@
 const { Resend } = require('resend');
 const resend = new Resend(process.env.RESEND_API_KEY);
-
 // Configuración de marcas
 const brands = {
   ridgid: {
