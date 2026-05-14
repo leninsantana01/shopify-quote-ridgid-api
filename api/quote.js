@@ -21,7 +21,7 @@ const brands = {
     logo: 'https://cdn.shopify.com/s/files/1/0524/9348/4231/files/greenlee-machinery.jpg',
     email: 'lenin@equipmentn.com',
     phone: '55 5351 6970',
-    website: 'greenleemachinery.com',
+    website: 'greenleemc.com',
     websiteUrl: 'https://greenleemachinery.com',
     formality: 'usted'
   },
@@ -32,7 +32,7 @@ const brands = {
     logo: 'https://cdn.shopify.com/s/files/1/0524/9348/4231/files/construir-mx-logo.jpg',
     email: 'cotizaciones@construirmx.mx',
     phone: '55 5351 6970',
-    website: 'construirmx.mx',
+    website: 'construir.com.mx',
     websiteUrl: 'https://construirmx.mx',
     formality: 'usted'
   }
