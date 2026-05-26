@@ -30,7 +30,7 @@ const brands = {
     color: '#d32f2f',
     colorDark: '#b71c1c',
     logo: 'https://cdn.shopify.com/s/files/1/0265/3428/1302/files/logo_construirmx_f0c0d036-dab5-4dd8-a5fa-3250eca91b98.png?v=1778004251',
-    email: 'juan.garcia@mmco.com.mx',
+    email: 'leninsantana42@gmail.com',
     phone: '55 5351 6970',
     website: 'construir.com.mx',
     websiteUrl: 'https://construir.com.mx',
