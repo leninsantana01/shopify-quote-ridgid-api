@@ -38,14 +38,10 @@ const brands = {
   }
 };
 
-// DIRECCIÓN DE PRUEBA - Temporalmente todos los correos van aquí
-const TEST_EMAIL = 'lenin@equipmentn.com';
-
 // Función para generar el correo del cliente
 function getClientEmailHTML(brand, data) {
   const brandConfig = brands[brand] || brands.ridgid;
   const { product, variant, sku, name, company, quantity, notes } = data;
-
   return `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
     <div style="background:${brandConfig.color};padding:24px;text-align:center">
       <img src="${brandConfig.logo}" alt="${brandConfig.name}" style="max-width:200px;height:auto">
@@ -73,7 +69,6 @@ function getClientEmailHTML(brand, data) {
 function getSalesEmailHTML(brand, data) {
   const brandConfig = brands[brand] || brands.ridgid;
   const { product, variant, sku, product_url, name, company, email, phone, quantity, notes } = data;
-
   return `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
     <div style="background:${brandConfig.color};padding:16px 24px">
       <h2 style="color:white;margin:0">Nueva solicitud de cotización - ${brandConfig.name}</h2>
@@ -103,51 +98,41 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido' });
-
   const { brand, product, variant, sku, product_url, name, company, email, phone, quantity, notes } = req.body;
-
   // Validación de marca
   if (!brand || !brands[brand]) {
     return res.status(400).json({ error: 'Marca no válida. Debe ser: ridgid, greenlee o construirmx' });
   }
-
   // Validación de campos requeridos
   if (!name || !company || !email || !product || !quantity) {
     return res.status(400).json({ error: 'Faltan campos requeridos: name, company, email, product, quantity' });
   }
-
   const brandConfig = brands[brand];
-
   try {
-    // Correo al cliente - TEMPORALMENTE VA A TEST_EMAIL
+    // Correo al cliente
     const clientEmailResult = await resend.emails.send({
-      from: `${brandConfig.name} <onboarding@resend.dev>`,
-      to: TEST_EMAIL,
+      from: `${brandConfig.name} <noreply@greenleemc.com>`,
+      to: email,
       subject: 'Confirmación de solicitud de cotización - ' + brandConfig.name,
       html: getClientEmailHTML(brand, { product, variant, sku, name, company, quantity, notes })
     });
-
     if (!clientEmailResult || clientEmailResult.error) {
       console.error('Error enviando correo al cliente:', clientEmailResult.error);
       return res.status(500).json({ error: 'Error enviando confirmación al cliente' });
     }
-
-    // Correo al equipo de ventas - TEMPORALMENTE VA A TEST_EMAIL
+    // Correo al equipo de ventas
     const salesEmailResult = await resend.emails.send({
-      from: `${brandConfig.name} Cotizaciones <onboarding@resend.dev>`,
-      to: TEST_EMAIL,
+      from: `${brandConfig.name} Cotizaciones <noreply@greenleemc.com>`,
+      to: brandConfig.email,
       subject: `[Nueva Cotización - ${brandConfig.name}] ${product} — ${company}`,
       html: getSalesEmailHTML(brand, { product, variant, sku, product_url, name, company, email, phone, quantity, notes })
     });
-
     if (!salesEmailResult || salesEmailResult.error) {
       console.error('Error enviando correo al equipo de ventas:', salesEmailResult.error);
       return res.status(500).json({ error: 'Error enviando solicitud al equipo de ventas' });
     }
-
     return res.status(200).json({ success: true, message: 'Cotización registrada exitosamente' });
   } catch (error) {
     console.error('Error en el handler:', error);
