@@ -35,6 +35,18 @@ const brands = {
     website: 'construir.com.mx',
     websiteUrl: 'https://construir.com.mx',
     formality: 'usted'
+  },
+  citysupply: {
+    name: 'City Supply',
+    color: '#0A1D37',
+    colorDark: '#061224',
+    logo: 'https://cdn.shopify.com/s/files/1/0277/3168/9577/files/City_Supply_logo-removebg-preview_fba3e3e6-c924-4d87-a18d-a403b968c931.png?v=1754089427',
+    email: 'lenin@equipmentn.com',
+    phone: '(713) 224-1643',
+    website: 'citysupplygroup.com',
+    websiteUrl: 'https://citysupplygroup.com',
+    fromEmail: 'noreply@citysupplygroup.com',
+    lang: 'en'
   }
 };
 
@@ -42,6 +54,31 @@ const brands = {
 function getClientEmailHTML(brand, data) {
   const brandConfig = brands[brand] || brands.ridgid;
   const { product, variant, sku, name, company, quantity, notes } = data;
+
+  if (brandConfig.lang === 'en') {
+    return `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
+      <div style="background:${brandConfig.color};padding:24px;text-align:center">
+        <img src="${brandConfig.logo}" alt="${brandConfig.name}" style="max-width:200px;height:auto">
+      </div>
+      <div style="padding:32px">
+        <h2 style="color:${brandConfig.color};margin-top:0">Hi ${name}!</h2>
+        <p>We received your quote request. A technical advisor will contact you within <strong>24 business hours</strong>.</p>
+        <div style="background:#f5f5f5;padding:16px;border-radius:6px;margin:24px 0">
+          <p style="margin:4px 0"><strong>Product:</strong> ${product}</p>
+          ${sku ? `<p style="margin:4px 0"><strong>SKU:</strong> ${sku}</p>` : ''}
+          <p style="margin:4px 0"><strong>Quantity:</strong> ${quantity}</p>
+          <p style="margin:4px 0"><strong>Company:</strong> ${company}</p>
+          ${notes ? `<p style="margin:4px 0"><strong>Specifications:</strong> ${notes}</p>` : ''}
+        </div>
+        <p style="color:#666;font-size:14px">Urgent questions? Call us at <strong>${brandConfig.phone}</strong><br>
+        <strong>Business hours:</strong> 9:00 AM - 5:00 PM</p>
+      </div>
+      <div style="background:#f0f0f0;padding:16px;text-align:center;font-size:12px;color:#666">
+        ${brandConfig.name} · <a href="${brandConfig.websiteUrl}" style="color:${brandConfig.color};text-decoration:none">${brandConfig.website}</a>
+      </div>
+    </div>`;
+  }
+
   return `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
     <div style="background:${brandConfig.color};padding:24px;text-align:center">
       <img src="${brandConfig.logo}" alt="${brandConfig.name}" style="max-width:200px;height:auto">
@@ -69,6 +106,32 @@ function getClientEmailHTML(brand, data) {
 function getSalesEmailHTML(brand, data) {
   const brandConfig = brands[brand] || brands.ridgid;
   const { product, variant, sku, product_url, name, company, email, phone, quantity, notes } = data;
+
+  if (brandConfig.lang === 'en') {
+    return `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
+      <div style="background:${brandConfig.color};padding:16px 24px">
+        <h2 style="color:white;margin:0">New Quote Request - ${brandConfig.name}</h2>
+      </div>
+      <div style="padding:24px">
+        <table style="width:100%;border-collapse:collapse">
+          <tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:bold;width:130px">Product</td><td style="padding:8px;border-bottom:1px solid #eee">${product}</td></tr>
+          ${variant ? `<tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:bold">Variant</td><td style="padding:8px;border-bottom:1px solid #eee">${variant}</td></tr>` : ''}
+          ${sku ? `<tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:bold">SKU</td><td style="padding:8px;border-bottom:1px solid #eee">${sku}</td></tr>` : ''}
+          <tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:bold">Quantity</td><td style="padding:8px;border-bottom:1px solid #eee">${quantity}</td></tr>
+          <tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:bold">Customer</td><td style="padding:8px;border-bottom:1px solid #eee">${name}</td></tr>
+          <tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:bold">Company</td><td style="padding:8px;border-bottom:1px solid #eee">${company}</td></tr>
+          <tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:bold">Email</td><td style="padding:8px;border-bottom:1px solid #eee"><a href="mailto:${email}">${email}</a></td></tr>
+          ${phone ? `<tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:bold">Phone</td><td style="padding:8px;border-bottom:1px solid #eee">${phone}</td></tr>` : ''}
+          ${notes ? `<tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:bold">Specifications</td><td style="padding:8px;border-bottom:1px solid #eee">${notes}</td></tr>` : ''}
+          ${product_url ? `<tr><td style="padding:8px;border-bottom:1px solid #eee;font-weight:bold">Product URL</td><td style="padding:8px;border-bottom:1px solid #eee"><a href="${product_url}">${product_url}</a></td></tr>` : ''}
+        </table>
+        <div style="margin-top:24px;padding-top:24px;border-top:1px solid #eee;font-size:12px;color:#666">
+          <p style="margin:0">Request received via quote form on ${brandConfig.website}</p>
+        </div>
+      </div>
+    </div>`;
+  }
+
   return `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
     <div style="background:${brandConfig.color};padding:16px 24px">
       <h2 style="color:white;margin:0">Nueva solicitud de cotización - ${brandConfig.name}</h2>
@@ -103,17 +166,18 @@ module.exports = async function handler(req, res) {
   const { brand, product, variant, sku, product_url, name, company, email, phone, quantity, notes } = req.body;
   // Validación de marca
   if (!brand || !brands[brand]) {
-    return res.status(400).json({ error: 'Marca no válida. Debe ser: ridgid, greenlee o construirmx' });
+    return res.status(400).json({ error: 'Marca no válida. Debe ser: ridgid, greenlee, construirmx o citysupply' });
   }
   // Validación de campos requeridos
   if (!name || !company || !email || !product || !quantity) {
     return res.status(400).json({ error: 'Faltan campos requeridos: name, company, email, product, quantity' });
   }
   const brandConfig = brands[brand];
+  const fromEmail = brandConfig.fromEmail || 'noreply@greenleemc.com';
   try {
     // Correo al cliente
     const clientEmailResult = await resend.emails.send({
-      from: `${brandConfig.name} <noreply@greenleemc.com>`,
+      from: `${brandConfig.name} <${fromEmail}>`,
       to: email,
       subject: 'Confirmación de solicitud de cotización - ' + brandConfig.name,
       html: getClientEmailHTML(brand, { product, variant, sku, name, company, quantity, notes })
@@ -124,7 +188,7 @@ module.exports = async function handler(req, res) {
     }
     // Correo al equipo de ventas
     const salesEmailResult = await resend.emails.send({
-      from: `${brandConfig.name} Cotizaciones <noreply@greenleemc.com>`,
+      from: `${brandConfig.name} Cotizaciones <${fromEmail}>`,
       to: brandConfig.email,
       subject: `[Nueva Cotización - ${brandConfig.name}] ${product} — ${company}`,
       html: getSalesEmailHTML(brand, { product, variant, sku, product_url, name, company, email, phone, quantity, notes })
