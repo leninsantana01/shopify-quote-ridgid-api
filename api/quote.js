@@ -45,7 +45,6 @@ const brands = {
     phone: '(713) 224-1643',
     website: 'citysupplygroup.com',
     websiteUrl: 'https://citysupplygroup.com',
-    fromEmail: 'noreply@citysupplygroup.com',
     lang: 'en'
   }
 };
