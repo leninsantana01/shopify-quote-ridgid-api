@@ -1,7 +1,16 @@
 const { Resend } = require('resend');
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+// ---------------------------------------------------------------------------
 // Configuración de marcas
+// fromEmail / fromName: remitente de los correos de esa marca.
+//   - El dominio de fromEmail DEBE estar verificado en Resend (Domains).
+//   - Para City Supply se puede definir CITYSUPPLY_FROM_EMAIL en Vercel
+//     (ej. quotes@citysupplygroup.com) sin tocar el código. Mientras no exista,
+//     usa el remitente actual.
+// ---------------------------------------------------------------------------
+const DEFAULT_FROM_EMAIL = 'noreply@greenleemc.com';
+
 const brands = {
   ridgid: {
     name: 'RIDGID',
@@ -12,7 +21,8 @@ const brands = {
     phone: '55 5351 6970',
     website: 'ridgidmc.com',
     websiteUrl: 'https://ridgidmc.com',
-    formality: 'usted'
+    formality: 'usted',
+    lang: 'es'
   },
   greenlee: {
     name: 'GreenleeMC',
@@ -23,7 +33,8 @@ const brands = {
     phone: '55 5351 6970',
     website: 'greenleemc.com',
     websiteUrl: 'https://greenleemc.com',
-    formality: 'usted'
+    formality: 'usted',
+    lang: 'es'
   },
   construirmx: {
     name: 'Construir MX',
@@ -34,7 +45,8 @@ const brands = {
     phone: '55 5351 6970',
     website: 'construir.com.mx',
     websiteUrl: 'https://construir.com.mx',
-    formality: 'usted'
+    formality: 'usted',
+    lang: 'es'
   },
   citysupply: {
     name: 'City Supply',
@@ -45,14 +57,65 @@ const brands = {
     phone: '(713) 224-1643',
     website: 'citysupplygroup.com',
     websiteUrl: 'https://citysupplygroup.com',
-    lang: 'en'
+    lang: 'en',
+    fromEmail: process.env.CITYSUPPLY_FROM_EMAIL || DEFAULT_FROM_EMAIL
   }
 };
 
-// Función para generar el correo del cliente
+// Textos que dependen del idioma (asuntos y nombre del remitente del correo interno)
+const texts = {
+  en: {
+    clientSubject: (b) => `Quote Request Confirmation - ${b.name}`,
+    salesSubject: (b, d) => `[New Quote Request - ${b.name}] ${d.product} — ${d.company}`,
+    salesFromName: (b) => `${b.name} Quotes`
+  },
+  es: {
+    clientSubject: (b) => `Confirmación de solicitud de cotización - ${b.name}`,
+    salesSubject: (b, d) => `[Nueva Cotización - ${b.name}] ${d.product} — ${d.company}`,
+    salesFromName: (b) => `${b.name} Cotizaciones`
+  }
+};
+
+// ---------------------------------------------------------------------------
+// Seguridad: los datos del formulario los escribe cualquier persona, así que
+// se escapan antes de meterlos al HTML del correo.
+// ---------------------------------------------------------------------------
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// Texto de una sola línea (para asuntos): sin saltos de línea
+function oneLine(value) {
+  return String(value ?? '').replace(/[\r\n]+/g, ' ').trim().slice(0, 200);
+}
+
+function cleanText(value, max = 2000) {
+  return String(value ?? '').trim().slice(0, max);
+}
+
+// Solo permite URLs http(s) (evita javascript: en los enlaces)
+function safeUrl(value) {
+  try {
+    const u = new URL(String(value || ''));
+    return u.protocol === 'http:' || u.protocol === 'https:' ? u.href : '';
+  } catch {
+    return '';
+  }
+}
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// ---------------------------------------------------------------------------
+// Correo al cliente
+// ---------------------------------------------------------------------------
 function getClientEmailHTML(brand, data) {
   const brandConfig = brands[brand] || brands.ridgid;
-  const { product, variant, sku, name, company, quantity, notes } = data;
+  const { product, sku, name, company, quantity, notes } = data; // ya escapados
 
   if (brandConfig.lang === 'en') {
     return `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
@@ -101,10 +164,12 @@ function getClientEmailHTML(brand, data) {
   </div>`;
 }
 
-// Función para generar el correo del equipo de ventas
+// ---------------------------------------------------------------------------
+// Correo al equipo de ventas
+// ---------------------------------------------------------------------------
 function getSalesEmailHTML(brand, data) {
   const brandConfig = brands[brand] || brands.ridgid;
-  const { product, variant, sku, product_url, name, company, email, phone, quantity, notes } = data;
+  const { product, variant, sku, product_url, name, company, email, phone, quantity, notes } = data; // ya escapados
 
   if (brandConfig.lang === 'en') {
     return `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
@@ -162,40 +227,73 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido' });
-  const { brand, product, variant, sku, product_url, name, company, email, phone, quantity, notes } = req.body;
+
+  const body = req.body || {};
+  const { brand } = body;
+
   // Validación de marca
-  if (!brand || !brands[brand]) {
+  if (!brand || !Object.prototype.hasOwnProperty.call(brands, brand)) {
     return res.status(400).json({ error: 'Marca no válida. Debe ser: ridgid, greenlee, construirmx o citysupply' });
   }
+
   // Validación de campos requeridos
+  const { name, company, email, product, quantity } = body;
   if (!name || !company || !email || !product || !quantity) {
     return res.status(400).json({ error: 'Faltan campos requeridos: name, company, email, product, quantity' });
   }
+  if (!EMAIL_RE.test(String(email).trim())) {
+    return res.status(400).json({ error: 'Email no válido' });
+  }
+
   const brandConfig = brands[brand];
-  const fromEmail = brandConfig.fromEmail || 'noreply@greenleemc.com';
+  const t = texts[brandConfig.lang === 'en' ? 'en' : 'es'];
+  const fromEmail = brandConfig.fromEmail || DEFAULT_FROM_EMAIL;
+  const customerEmail = String(email).trim();
+
+  // Datos escapados para el HTML
+  const safe = {
+    product: escapeHtml(cleanText(product, 300)),
+    variant: escapeHtml(cleanText(body.variant, 300)),
+    sku: escapeHtml(cleanText(body.sku, 100)),
+    product_url: escapeHtml(safeUrl(body.product_url)),
+    name: escapeHtml(cleanText(name, 150)),
+    company: escapeHtml(cleanText(company, 200)),
+    email: escapeHtml(customerEmail),
+    phone: escapeHtml(cleanText(body.phone, 50)),
+    quantity: escapeHtml(cleanText(quantity, 50)),
+    notes: escapeHtml(cleanText(body.notes, 2000))
+  };
+
+  // Datos sin escapar, solo para asuntos (una línea)
+  const subjectData = { product: oneLine(product), company: oneLine(company) };
+
   try {
-    // Correo al cliente
-    const clientEmailResult = await resend.emails.send({
-      from: `${brandConfig.name} <${fromEmail}>`,
-      to: email,
-      subject: 'Confirmación de solicitud de cotización - ' + brandConfig.name,
-      html: getClientEmailHTML(brand, { product, variant, sku, name, company, quantity, notes })
-    });
-    if (!clientEmailResult || clientEmailResult.error) {
-      console.error('Error enviando correo al cliente:', clientEmailResult.error);
-      return res.status(500).json({ error: 'Error enviando confirmación al cliente' });
-    }
-    // Correo al equipo de ventas
+    // 1) Correo al equipo de ventas (primero: nunca se debe perder un lead)
     const salesEmailResult = await resend.emails.send({
-      from: `${brandConfig.name} Cotizaciones <${fromEmail}>`,
+      from: `${t.salesFromName(brandConfig)} <${fromEmail}>`,
       to: brandConfig.email,
-      subject: `[Nueva Cotización - ${brandConfig.name}] ${product} — ${company}`,
-      html: getSalesEmailHTML(brand, { product, variant, sku, product_url, name, company, email, phone, quantity, notes })
+      replyTo: customerEmail,
+      subject: t.salesSubject(brandConfig, subjectData),
+      html: getSalesEmailHTML(brand, safe)
     });
     if (!salesEmailResult || salesEmailResult.error) {
-      console.error('Error enviando correo al equipo de ventas:', salesEmailResult.error);
+      console.error('Error enviando correo al equipo de ventas:', salesEmailResult && salesEmailResult.error);
       return res.status(500).json({ error: 'Error enviando solicitud al equipo de ventas' });
     }
+
+    // 2) Confirmación al cliente
+    const clientEmailResult = await resend.emails.send({
+      from: `${brandConfig.name} <${fromEmail}>`,
+      to: customerEmail,
+      replyTo: brandConfig.email,
+      subject: t.clientSubject(brandConfig),
+      html: getClientEmailHTML(brand, safe)
+    });
+    if (!clientEmailResult || clientEmailResult.error) {
+      // El equipo ya recibió la cotización; solo se registra el fallo de la confirmación.
+      console.error('Error enviando correo al cliente:', clientEmailResult && clientEmailResult.error);
+    }
+
     return res.status(200).json({ success: true, message: 'Cotización registrada exitosamente' });
   } catch (error) {
     console.error('Error en el handler:', error);
