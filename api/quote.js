@@ -53,7 +53,7 @@ const brands = {
     color: '#0A1D37',
     colorDark: '#061224',
     logo: 'https://cdn.shopify.com/s/files/1/0277/3168/9577/files/City_Supply_logo-removebg-preview_fba3e3e6-c924-4d87-a18d-a403b968c931.png?v=1754089427',
-    email: 'lenin@equipmentn.com',
+    email: 'contact@citysupplyhouston.com',
     phone: '(713) 224-1643',
     website: 'citysupplygroup.com',
     websiteUrl: 'https://citysupplygroup.com',
